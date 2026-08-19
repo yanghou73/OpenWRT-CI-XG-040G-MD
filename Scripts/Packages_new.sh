@@ -49,9 +49,15 @@ UPDATE_PACKAGE "argon" "sbwml/luci-theme-argon" "openwrt-25.12"
 
 # 代理插件
 UPDATE_PACKAGE "openclash" "vernesong/OpenClash" "dev" "pkg"
+UPDATE_PACKAGE "passwall" "Openwrt-Passwall/openwrt-passwall" "main" "pkg"
+UPDATE_PACKAGE "passwall2" "Openwrt-Passwall/openwrt-passwall2" "main" "pkg"
 
 # SmartDNS
-UPDATE_PACKAGE "smartdns" "pymumu/openwrt-smartdns" "master" "pkg"
+UPDATE_PACKAGE "smartdns" "pymumu/openwrt-smartdns" "master" ""
+UPDATE_PACKAGE "luci-app-smartdns" "pymumu/luci-app-smartdns" "master" ""
+
+# 网络测速
+UPDATE_PACKAGE "netspeedtest" "sirpdboy/netspeedtest" "main" "" "homebox ookla-speedtest"
 
 # 常用插件
 UPDATE_PACKAGE "ddns-go" "sirpdboy/luci-app-ddns-go" "main"
