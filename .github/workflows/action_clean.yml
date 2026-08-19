@@ -1,0 +1,63 @@
+#
+# Manual clean old releases and workflows for XG-040G-MD AIROHA project
+# 手动清理 GitHub Releases 和历史 Workflow 运行记录
+#
+
+name: Action Clean
+
+on:
+  workflow_dispatch:
+    inputs:
+      releases_keep:
+        description: '保留最新 Release 数量'
+        required: true
+        default: '5'
+        type: string
+      workflows_keep_day:
+        description: '保留多少天内的 Workflow 运行记录'
+        required: true
+        default: '7'
+        type: string
+      delete_releases:
+        description: '是否删除 Releases'
+        required: true
+        default: 'true'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+      delete_workflows:
+        description: '是否删除 Workflow 运行记录'
+        required: true
+        default: 'true'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+
+jobs:
+  clean:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: write
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@main
+
+    - name: Clean old Releases and Workflows
+      uses: ophub/delete-releases-workflows@main
+      with:
+        delete_releases: ${{ github.event.inputs.delete_releases }}
+        releases_keep_latest: ${{ github.event.inputs.releases_keep }}
+        delete_tags: true
+        delete_workflows: ${{ github.event.inputs.delete_workflows }}
+        workflows_keep_day: ${{ github.event.inputs.workflows_keep_day }}
+        gh_token: ${{ github.token }}
+
+    - name: Summary
+      run: |
+        echo "清理完成"
+        echo "保留最新 Release 数量: ${{ github.event.inputs.releases_keep }}"
+        echo "保留 Workflow 天数: ${{ github.event.inputs.workflows_keep_day }}"
