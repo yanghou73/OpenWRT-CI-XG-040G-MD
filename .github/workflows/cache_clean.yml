@@ -1,0 +1,48 @@
+#
+# Cache clean for WR30U project
+# 清理 GitHub Actions 缓存
+#
+
+name: Cache Clean
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: '确认清理所有缓存？输入 yes 执行'
+        required: true
+        default: 'no'
+        type: string
+
+jobs:
+  clean:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@main
+
+    - name: Clean all caches
+      if: github.event.inputs.confirm == 'yes'
+      run: |
+        echo "开始清理缓存..."
+        CACHE_LIST=$(gh cache list --json key --limit 100 -q '.[].key')
+        if [ -z "$CACHE_LIST" ]; then
+          echo "无缓存可清理"
+          exit 0
+        fi
+        COUNT=0
+        for CACHE_KEY in $CACHE_LIST; do
+          echo "删除缓存: $CACHE_KEY"
+          gh cache delete "$CACHE_KEY" || true
+          COUNT=$((COUNT+1))
+        done
+        echo "清理完成，共删除 $COUNT 个缓存"
+      env:
+        GH_TOKEN: ${{ github.token }}
+
+    - name: Skip
+      if: github.event.inputs.confirm != 'yes'
+      run: echo "未确认，跳过清理。请在输入框中输入 yes 确认执行。"
