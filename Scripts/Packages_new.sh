@@ -56,6 +56,23 @@ UPDATE_PACKAGE "passwall2" "Openwrt-Passwall/openwrt-passwall2" "main" "pkg"
 UPDATE_PACKAGE "smartdns" "pymumu/openwrt-smartdns" "master" ""
 UPDATE_PACKAGE "luci-app-smartdns" "pymumu/luci-app-smartdns" "master" ""
 
+# 修复 smartdns 哈希校验：拉取最新源码后自动更新 Makefile 中的 PKG_HASH
+SMARTDNS_MK=$(find ./package/ -maxdepth 3 -type f -wholename "*/openwrt-smartdns/Makefile" 2>/dev/null | head -1)
+if [ -n "$SMARTDNS_MK" ] && [ -d "./openwrt-smartdns" ]; then
+  cd ./openwrt-smartdns
+  SMARTDNS_HASH=$(git rev-parse HEAD 2>/dev/null)
+  SMARTDNS_VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+  if [ -z "$SMARTDNS_VERSION" ]; then
+    SMARTDNS_VERSION=$(git log -1 --format='%cd' --date=format:'%Y.%m.%d' 2>/dev/null)
+  fi
+  cd ..
+  if [ -n "$SMARTDNS_HASH" ]; then
+    echo "更新 smartdns PKG_HASH: $SMARTDNS_HASH"
+    sed -i "s/^PKG_HASH:=.*/PKG_HASH:=$SMARTDNS_HASH/" "$SMARTDNS_MK" 2>/dev/null || true
+    sed -i "s/^PKG_VERSION:=.*/PKG_VERSION:=$SMARTDNS_VERSION/" "$SMARTDNS_MK" 2>/dev/null || true
+  fi
+fi
+
 # 网络测速
 UPDATE_PACKAGE "netspeedtest" "sirpdboy/netspeedtest" "main" "" "homebox ookla-speedtest"
 
