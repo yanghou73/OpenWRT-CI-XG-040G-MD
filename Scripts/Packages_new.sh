@@ -56,20 +56,25 @@ UPDATE_PACKAGE "passwall2" "Openwrt-Passwall/openwrt-passwall2" "main" "pkg"
 UPDATE_PACKAGE "smartdns" "pymumu/openwrt-smartdns" "master" ""
 UPDATE_PACKAGE "luci-app-smartdns" "pymumu/luci-app-smartdns" "master" ""
 
-# 修复 smartdns 哈希校验：拉取最新源码后自动更新 Makefile 中的 PKG_HASH
+# 修复 smartdns 哈希校验：拉取最新源码后更新 Makefile 中的 PKG_SOURCE_VERSION 和 PKG_VERSION
+# smartdns 使用 PKG_SOURCE_PROTO:=git，需更新 PKG_SOURCE_VERSION（commit hash）
+# PKG_MIRROR_HASH 无法预计算，直接删除让构建系统从源 URL 下载
 SMARTDNS_MK=$(find ./package/ -maxdepth 3 -type f -wholename "*/openwrt-smartdns/Makefile" 2>/dev/null | head -1)
 if [ -n "$SMARTDNS_MK" ] && [ -d "./openwrt-smartdns" ]; then
   cd ./openwrt-smartdns
-  SMARTDNS_HASH=$(git rev-parse HEAD 2>/dev/null)
+  SMARTDNS_COMMIT=$(git rev-parse HEAD 2>/dev/null)
   SMARTDNS_VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
   if [ -z "$SMARTDNS_VERSION" ]; then
     SMARTDNS_VERSION=$(git log -1 --format='%cd' --date=format:'%Y.%m.%d' 2>/dev/null)
   fi
   cd ..
-  if [ -n "$SMARTDNS_HASH" ]; then
-    echo "更新 smartdns PKG_HASH: $SMARTDNS_HASH"
-    sed -i "s/^PKG_HASH:=.*/PKG_HASH:=$SMARTDNS_HASH/" "$SMARTDNS_MK" 2>/dev/null || true
+  if [ -n "$SMARTDNS_COMMIT" ]; then
+    echo "更新 smartdns PKG_SOURCE_VERSION: $SMARTDNS_COMMIT"
+    sed -i "s/^PKG_SOURCE_VERSION:=.*/PKG_SOURCE_VERSION:=$SMARTDNS_COMMIT/" "$SMARTDNS_MK" 2>/dev/null || true
     sed -i "s/^PKG_VERSION:=.*/PKG_VERSION:=$SMARTDNS_VERSION/" "$SMARTDNS_MK" 2>/dev/null || true
+    # 删除 PKG_MIRROR_HASH 行，避免旧哈希校验失败
+    sed -i "/^PKG_MIRROR_HASH:=/d" "$SMARTDNS_MK" 2>/dev/null || true
+    echo "smartdns Makefile 哈希修复完成"
   fi
 fi
 
